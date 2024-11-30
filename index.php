@@ -1,374 +1,122 @@
-<?php
-session_start();
+<?php include('includes/header.php'); ?>
+<?php include('includes/sidebar.php'); ?>
 
-include_once 'crest/crest.php';
+<div class="flex-1 bg-gray-100 dark:bg-gray-900 relative">
+    <?php include('includes/navbar.php'); ?>
 
-// Define the pipeline ID
-define("SUPRAJA_PIPELINE_ID", 23); //  
-
-function fetchDeals() {
-    $deals = CRest::call('crm.deal.list', [
-        'filter' => ['CATEGORY_ID' => SUPRAJA_PIPELINE_ID,23], // Use the defined pipeline ID
-        'select' => [
-             '*', 'UF_*'
-        ]
-    ]);
-
-    // Extract only the deals' results, if available
-    $dealResults = $deals['result'] ?? [];
-
-    // echo '<pre>';
-    // print_r($dealResults); // Display only the deals data
-    // echo '</pre>';
-    
-    return $dealResults;
-}
-
-
-function calculateTotals($deals) {
-    $dealsTotal = count($deals);
-    $totalAmount = 0;
-    $referralAmountTotal = 0;
-
-    foreach ($deals as $deal) {
-        // Ensure the property price is present and numeric
-        $propertyPrice = isset($deal['UF_CRM_1729499970282']) && is_numeric($deal['UF_CRM_1729499970282']) ? floatval($deal['UF_CRM_1729499970282']) : 0;
-        
-        // Debugging output for property price
-        error_log("Deal ID: {$deal['ID']}, Property Price: $propertyPrice");
-        
-        $totalAmount += $propertyPrice;
-
-        // Ensure the referral fee status is present
-        if (isset($deal['UF_CRM_1729500039460'])) {
-            $referralFeeStatus = $deal['UF_CRM_1729500039460'];
-            // Debugging output for referral fee status
-            error_log("Deal ID: {$deal['ID']}, Referral Fee Status: $referralFeeStatus");
-
-            if ($referralFeeStatus == 717) { // Approved
-                $referralAmountTotal += $propertyPrice * 0.1; // 10%
-            } elseif ($referralFeeStatus == 719) { // Rejected
-                $referralAmountTotal += $propertyPrice * 0.05; // 5%
-            }
-        }
-    }
-
-    // Log the final totals
-    error_log("Total Deals: $dealsTotal, Total Amount: $totalAmount, Referral Amount Total: $referralAmountTotal");
-
-    return [
-        'dealsTotal' => $dealsTotal,
-        'totalAmount' => $totalAmount,
-        'referralAmountTotal' => $referralAmountTotal
-    ];
-}
-
-
-
-   
-
-
-
-     
-
-
- 
-$deals = fetchDeals();
-$totals = calculateTotals($deals);
-
-
-$statusFilter = $_GET['status'] ?? 'all';
-if ($statusFilter !== 'all') {
-    $deals = array_filter($deals, function($deal) use ($statusFilter) {
-        return ($statusFilter === 'approved' && $deal['UF_CRM_1729500039460'] == 717) || 
-               ($statusFilter === 'rejected' && $deal['UF_CRM_1729500039460'] == 719) || 
-               ($statusFilter === 'not_selected' && $deal['UF_CRM_1729500039460'] == null);
-    });
-}
-
-// After checking if the POST request is valid
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Fetch deal ID and referral fee ID from POST data
-    $dealId = $_POST['dealId'] ?? null;
-    $referralFeeId = $_POST['referralFeeId'] ?? null;
-
-    // Check if deal ID and referral fee ID are set and valid
-    if ($dealId && $referralFeeId && in_array($referralFeeId, [717, 719])) {
-        // Call the Bitrix24 API to update the deal
-        $result = CRest::call('crm.deal.update', [
-            'id' => $dealId,  // Ensure only this deal is updated
-            'fields' => ['UF_CRM_1729500039460' => $referralFeeId]  // Update the referral fee
-        ]);
-
-        // Check if the update was successful
-        if (isset($result['result']) && $result['result']) {
-            $_SESSION['message'] = "Referral fee updated successfully.";
-        } else {
-            // Log the error message
-            $errorMessage = $result['error'] ?? 'Unknown error';
-            error_log("Failed to update referral fee for Deal ID $dealId. Error: " . htmlspecialchars($errorMessage));
-        }
-
-        // Redirect to avoid resubmission on refresh and preserve the current status filter
-        header("Location: " . $_SERVER['PHP_SELF'] . "?status=" . urlencode($statusFilter));
-        exit;
-    } else {
-        // Log a warning if the IDs are not valid
-        error_log("Invalid deal ID or referral fee ID. Deal ID: " . htmlspecialchars($dealId) . ", Referral Fee ID: " . htmlspecialchars($referralFeeId));
-    }
-}
-
-// Set the status filter to keep filtering the deals
-$statusFilter = $_GET['status'] ?? 'all';
-
-
-
-
-
-// Retrieve the message and clear it from the session
-$message = $_SESSION['message'] ?? '';
-unset($_SESSION['message']);
-?>
-
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CRM Application - Home</title>
-    <link rel="stylesheet" href="style.css">
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            background-color: #f8f9fa;
-            color: #333;
-            display: flex;
-        }
-
-        .container {
-            flex: 1;
-            max-width: 1200px;
-            margin: 20px auto;
-            padding-left: 220px; /* Leave space for the sidebar */
-        }
-
-        .sidebar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100px;
-            height: 100%;
-            background-color: #20c997;
-            color: #fff;
-            padding: 20px;
-        }
-
-        .sidebar h3 {
-            color: #fff;
-        }
-
-        .sidebar a {
-            display: block;
-            color: #fff;
-            padding: 10px;
-            text-decoration: none;
-            margin-bottom: 10px;
-            border-radius: 4px;
-            transition: background-color 0.3s;
-        }
-
-        .sidebar a:hover {
-            background-color: #495057;
-        }
-
-        h2 {
-            color: #343a40;
-            text-align: center;
-            margin-bottom: 20px;
-        }
-
-        .totals {
-            display: flex;
-            justify-content: space-between;
-            padding: 20px;
-            background-color: #e9ecef;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        .totals div {
-            font-size: 16px; /* Adjusted font size for better visibility */
-            font-weight: bold;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 20px;
-            background-color: #fff;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        th,
-        td {
-            border: 1px solid #dee2e6;
-            padding: 12px 15px;
-            text-align: left;
-        }
-
-        th {
-            background-color: #20c997;
-            color: white;
-            text-transform: uppercase;
-        }
-
-        tr:hover {
-            background-color: #f1f1f1;
-        }
-
-        input[type="text"],
-        input[type="number"] {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            box-sizing: border-box;
-            background-color: #f8f9fa;
-        }
-
-        button {
-            padding: 10px 15px;
-            color: white;
-            border: none;
-            cursor: pointer;
-            border-radius: 4px;
-            transition: background-color 0.3s ease;
-        }
-
-        .btn-blue {
-            background-color: #007bff;
-        }
-
-        .btn-blue:hover {
-            background-color: #0056b3;
-        }
-
-        .btn-red {
-            background-color: #dc3545;
-        }
-
-        .btn-red:hover {
-            background-color: #b02a37;
-        }
-
-        .action-buttons {
-            display: flex;
-            gap: 10px;
-        }
-
-        @media screen and (max-width: 768px) {
-            .totals {
-                flex-direction: column;
-                text-align: center;
-            }
-        }
-    </style>
-</head>
-
-<body>
-    <div class="sidebar">
-        <h3></h3>
-        <a href="?status=not_selected">All Deals</a>
-        <a href="?status=approved">Approved Deals</a>
-        <a href="?status=rejected">Rejected Deals</a>
-        
+    <!-- Loading Spinner -->
+    <div id="loadingSpinner" class="absolute inset-0 flex items-center justify-center">
+        <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-500"></div>
     </div>
 
-    <div class="container">
-        <!-- Display totals -->
-        <div class="totals">
-        <div>Total Deals: <span><?php echo $totals['dealsTotal']; ?></span></div>
-    <div>Total Amount: <span><?php echo number_format($totals['totalAmount'], 2); ?></span></div>
-    <div>Total Referral Amount: <span><?php echo number_format($totals['referralAmountTotal'], 2); ?></span></div>
+    <div class="max-w-[85%] mx-auto px-8 py-8 pt-0" id="formContainer" style="display: none;">
+        <h1 class="text-3xl font-bold text-center text-gray-800 dark:text-white">
+            <span class="month"></span> <span class="year"></span> Referral Module
+        </h1>
+        <p class="text-lg font-semibold text-center text-gray-600 dark:text-gray-400 mb-8 ">
+            <span class="username"></span>
+        </p>
+
+        <div class="flex justify-between items-center mb-4 shadow bg-white dark:bg-gray-800 dark:text-white rounded p-4">
+            <div>Total Deals: <span><?php echo $totals['dealsTotal']; ?></span></div>
+            <div>Total Amount: <span><?php echo number_format($totals['totalAmount'], 2); ?></span></div>
+            <div>Total Referral Amount: <span><?php echo number_format($totals['referralAmountTotal'], 2); ?></span></div>
+        </div>
+
+        <div class="flex flex-col">
+            <div class="-m-1.5 overflow-x-auto">
+                <div class="p-1.5 min-w-full inline-block align-middle">
+                    <div class="overflow-hidden">
+                        <table class="min-w-full divide-y divide-gray-200 dark:divide-neutral-700">
+                            <thead>
+                                <tr>
+                                    <th scope="col" class="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase dark:text-neutral-500">Deal Name</th>
+                                    <th scope="col" class="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase dark:text-neutral-500">Responsible Person</th>
+                                    <th scope="col" class="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase dark:text-neutral-500">Project Name</th>
+                                    <th scope="col" class="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase dark:text-neutral-500">Unit Number</th>
+                                    <th scope="col" class="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase dark:text-neutral-500">Property Price</th>
+                                    <th scope="col" class="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase dark:text-neutral-500">Gross Commission</th>
+                                    <th scope="col" class="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase dark:text-neutral-500">Referral Fee</th>
+                                    <th scope="col" class="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase dark:text-neutral-500">Referral Comments</th>
+                                    <th scope="col" class="px-6 py-3 text-end text-xs font-medium text-gray-500 uppercase dark:text-neutral-500">Referral Action</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200 dark:divide-neutral-700">
+                                <tr>
+                                    <td colspan="9">Fetching data...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
 </div>
 
-        <h2>Current Deals</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>Deal Name</th>
-                    <th>Responsible Person</th>
-                    <th>Project Name</th>
-                    <th>Unit Number</th>
-                    <th>Property Price</th>
-                    <th>Gross Commission</th>
-                    <th>Referral Fee</th>
-                    <th>Referral</th>
-                    <th>Action</th>
-                    <th>Referral Comments</th>
-                </tr>
-            </thead>
-            <tbody>
-            <?php
-    foreach ($deals as $deal):
-        // Initialize referral fee status
-        $referralFeeStatus = 'Not Selected';
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const loadingSpinner = document.getElementById("loadingSpinner");
+        const formContainer = document.getElementById("formContainer");
 
-        // Check if referral fee exists and set the status
-        if (isset($deal['UF_CRM_1729500039460'])) {
-            if ($deal['UF_CRM_1729500039460'] == 717) {
-                $referralFeeStatus = 'Approved';
-            } elseif ($deal['UF_CRM_1729500039460'] == 719) {
-                $referralFeeStatus = 'Rejected';
-            }
-        }
-    ?>
-                <tr>
-                    <td><input type="text" name="DealName" value="<?php echo htmlspecialchars($deal['UF_CRM_1729499879083'] ?? ''); ?>" readonly></td>
-                    <td><input type="text" name="Responsibleperson" value="<?php echo htmlspecialchars($deal['UF_CRM_1729499903050'] ?? ''); ?>" readonly></td>
-                    <td><input type="text" name="ProjectName" value="<?php echo htmlspecialchars($deal['UF_CRM_1729499931812'] ?? ''); ?>" readonly></td>
-                    <td><input type="text" name="UnitNumber" value="<?php echo htmlspecialchars($deal['UF_CRM_1729499952106'] ?? ''); ?>" readonly></td>
-                    <td><input type="number" name="PropertyPrice" value="<?php echo htmlspecialchars($deal['UF_CRM_1729499970282'] ?? ''); ?>" readonly></td>
-                    <td><input type="number" name="GrossCommission" value="<?php echo htmlspecialchars($deal['UF_CRM_1729499988571'] ?? ''); ?>" readonly></td>
-                    <td><input type="text" name="ReferralFee" value="<?php echo htmlspecialchars($deal['UF_CRM_1729500007347'] ?? ''); ?>" readonly></td>
-                    
-                    <td>
-                        <input type="text" name="Referral" 
-                               value="<?php 
-                                   echo htmlspecialchars($referralFeeStatus);
-                               ?>" 
-                               readonly>
-                    </td>
+        // Show spinner initially
+        loadingSpinner.style.display = 'flex';
+        formContainer.style.display = 'none';
 
-                    <td>
-                    <div class="action-buttons">
-                    <form method="POST" action="">
-                                <input type="hidden" name="dealId" value="<?php echo $deal['ID']; ?>">
-                                <input type="hidden" name="referralFeeId" value="717">
-                                <button type="submit" class="btn-blue">Approve</button>
-                            </form>
-                            <form method="POST" action="">
-                                <input type="hidden" name="dealId" value="<?php echo $deal['ID']; ?>">
-                                <input type="hidden" name="referralFeeId" value="719">
-                                <button type="submit" class="btn-red">Reject</button>
-                            </form>
-                        </div>
-                        </div>
-                    </td>
-                    <td><input type="text" name="Referral Comments" value="<?php echo htmlspecialchars($deal['UF_CRM_1729500122690'] ?? ''); ?>" readonly></td>
-                </tr>
-                <?php endforeach; ?>
-            </tbody>
-        </table>
+        fetch('./data/fetch_data.php')
+            .then(response => response.json())
+            .then(data => {
+                console.log(data);
 
-        <?php if ($message): ?>
-            <div class="alert"><?php echo htmlspecialchars($message); ?></div>
-        <?php endif; ?>
-    </div>
-</body>
-</html>
+                const deals = data.deals;
+
+                const tableBody = document.querySelector('tbody');
+                tableBody.innerHTML = '';
+                
+                if(deals && deals.length === 0) {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td colspan="9" class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 dark:text-neutral-200 text-center">No deals found</td>
+                    `;
+                    tableBody.appendChild(row);
+                }
+
+                deals.forEach(deal => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 dark:text-neutral-200">${deal.TITLE}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-blue-500 dark:text-blue-200 underline"><a target="_blank" href="https://crm.springfieldproperties.ae/company/personal/user/${deal.ASSIGNED_BY_ID['ID']}/">${deal.ASSIGNED_BY_ID['FULL_NAME']}</a></td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800 dark:text-neutral-200">${deal.UF_CRM_1727625779110 || 'N/A'}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 dark:text-neutral-200">${deal.UF_CRM_1727625804043 || 'N/A'}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800 dark:text-neutral-200">${deal.OPPORTUNITY}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800 dark:text-neutral-200">${deal.UF_CRM_1727871887978}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 dark:text-neutral-200">${deal.UF_CRM_1727626055823 || 'N/A'}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800 dark:text-neutral-200">${deal.UF_CRM_1729349757819 || 'N/A'}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-end text-sm font-medium">
+                            <button type="button" class="inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent focus:outline-none disabled:opacity-50 disabled:pointer-events-none ${deal.UF_CRM_1728042953037 == 1297 ? 'dark:text-red-500 dark:hover:text-red-400 dark:focus:text-red-400 text-blue-600 hover:text-blue-800 focus:text-blue-800' : 'dark:text-blue-500 dark:hover:text-blue-400 dark:focus:text-blue-400 text-red-600 hover:text-red-800 focus:text-red-800' }">${deal.UF_CRM_1728042953037 == 1292 ? 'Reject' : 'Approve' }</button>
+                        </td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+
+
+
+
+                // Hide the spinner and show the form once data is loaded
+                loadingSpinner.style.display = 'none';
+                formContainer.style.display = 'block';
+            })
+            .catch(error => {
+                console.error("Error fetching data:", error);
+
+                // Hide spinner if there's an error
+                loadingSpinner.style.display = 'none';
+                formContainer.style.display = 'block';
+            });
+    });
+</script>
+
+
+<?php include('includes/footer.php'); ?>
