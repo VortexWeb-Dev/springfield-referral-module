@@ -1,4 +1,24 @@
 <?php include('includes/header.php'); ?>
+
+<?php require('data/fetch_users.php'); ?>
+
+<?php
+
+$currentUser = getCurrentUser();
+
+if (!isAdmin($currentUser['ID'])) {
+    echo '
+    <div class="absolute inset-0 flex justify-center items-center text-center">
+        <p class="text-3xl font-bold text-gray-800 dark:text-white">
+            You are not authorized to view this page.
+        </p>
+    </div>';
+    exit;
+}
+
+
+?>
+
 <?php include('includes/sidebar.php'); ?>
 
 <div class="flex-1 bg-gray-100 dark:bg-gray-900 relative">
@@ -13,11 +33,8 @@
         <h1 class="text-3xl font-bold text-center text-gray-800 dark:text-white">
             <span class="month"></span> <span class="year"></span> Referral Module
         </h1>
-        <p class="text-lg font-semibold text-center text-gray-600 dark:text-gray-400 mb-8 ">
-            <span class="username"></span>
-        </p>
 
-        <div class="flex justify-between items-center mb-4 shadow bg-white dark:bg-gray-800 dark:text-white rounded p-4">
+        <div class="flex justify-between items-center my-4 shadow bg-white dark:bg-gray-800 dark:text-white rounded p-4">
             <div>Total Deals: <span id="totalDeals"></span></div>
             <div>Total Amount: <span id="totalAmount"></span></div>
             <div>Total Referral Amount: <span id="referralAmountTotal"></span></div>
