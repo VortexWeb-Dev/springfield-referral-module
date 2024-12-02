@@ -2,13 +2,14 @@
 require_once __DIR__ . '/../crest/crest.php';
 
 
-function getAllDeals()
+function getAllDeals($filter = [])
 {
     $result = CRest::call('crm.deal.list', [
         'select' => ['*', 'UF_*'],
-        'filter' => ['CATEGORY_ID' => 0],
+        'filter' => $filter,
         'order' => ['ID' => 'DESC'],
     ]);
+    
     $deals = $result['result'];
     return $deals;
 }

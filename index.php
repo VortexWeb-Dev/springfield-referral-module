@@ -18,9 +18,9 @@
         </p>
 
         <div class="flex justify-between items-center mb-4 shadow bg-white dark:bg-gray-800 dark:text-white rounded p-4">
-            <div>Total Deals: <span><?php echo $totals['dealsTotal']; ?></span></div>
-            <div>Total Amount: <span><?php echo number_format($totals['totalAmount'], 2); ?></span></div>
-            <div>Total Referral Amount: <span><?php echo number_format($totals['referralAmountTotal'], 2); ?></span></div>
+            <div>Total Deals: <span id="totalDeals"></span></div>
+            <div>Total Amount: <span id="totalAmount"></span></div>
+            <div>Total Referral Amount: <span id="referralAmountTotal"></span></div>
         </div>
 
         <div class="flex flex-col">
@@ -65,17 +65,28 @@
         loadingSpinner.style.display = 'flex';
         formContainer.style.display = 'none';
 
-        fetch('./data/fetch_data.php')
+        // Get status from URL parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        const status = urlParams.get('status');
+
+        fetch('./data/fetch_data.php' + (status ? '?status=' + status : ''))
             .then(response => response.json())
             .then(data => {
                 console.log(data);
 
                 const deals = data.deals;
+                const totalDeals = data.totalDeals;
+                const totalAmount = data.totalAmount;
+                const totalReferralAmount = data.totalReferralAmount;
+
+                document.getElementById('totalDeals').textContent = totalDeals;
+                document.getElementById('totalAmount').textContent = totalAmount;
+                document.getElementById('referralAmountTotal').textContent = totalReferralAmount;
 
                 const tableBody = document.querySelector('tbody');
                 tableBody.innerHTML = '';
-                
-                if(deals && deals.length === 0) {
+
+                if (deals && deals.length === 0) {
                     const row = document.createElement('tr');
                     row.innerHTML = `
                         <td colspan="9" class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 dark:text-neutral-200 text-center">No deals found</td>
@@ -85,6 +96,7 @@
 
                 deals.forEach(deal => {
                     const row = document.createElement('tr');
+                    const updateUrl = `./data/update_deal.php?dealId=${deal.ID}&newStatus=${deal.UF_CRM_1728042953037 == 1297 ? 1295 : 1297}` + (status ? '&status=' + status : '');
                     row.innerHTML = `
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 dark:text-neutral-200">${deal.TITLE}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-blue-500 dark:text-blue-200 underline"><a target="_blank" href="https://crm.springfieldproperties.ae/company/personal/user/${deal.ASSIGNED_BY_ID['ID']}/">${deal.ASSIGNED_BY_ID['FULL_NAME']}</a></td>
@@ -95,7 +107,7 @@
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 dark:text-neutral-200">${deal.UF_CRM_1727626055823 || 'N/A'}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800 dark:text-neutral-200">${deal.UF_CRM_1729349757819 || 'N/A'}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-end text-sm font-medium">
-                            <button type="button" class="inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent focus:outline-none disabled:opacity-50 disabled:pointer-events-none ${deal.UF_CRM_1728042953037 == 1297 ? 'dark:text-red-500 dark:hover:text-red-400 dark:focus:text-red-400 text-blue-600 hover:text-blue-800 focus:text-blue-800' : 'dark:text-blue-500 dark:hover:text-blue-400 dark:focus:text-blue-400 text-red-600 hover:text-red-800 focus:text-red-800' }">${deal.UF_CRM_1728042953037 == 1292 ? 'Reject' : 'Approve' }</button>
+                            <a href="${updateUrl}" class="inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent focus:outline-none disabled:opacity-50 disabled:pointer-events-none ${deal.UF_CRM_1728042953037 == 1297 ? 'dark:text-red-500 dark:hover:text-red-400 dark:focus:text-red-400 text-blue-600 hover:text-blue-800 focus:text-blue-800' : 'dark:text-blue-500 dark:hover:text-blue-400 dark:focus:text-blue-400 text-red-600 hover:text-red-800 focus:text-red-800' }">${deal.UF_CRM_1728042953037 == 1297 ? 'Approve' : 'Reject' }</a>
                         </td>
                     `;
                     tableBody.appendChild(row);
