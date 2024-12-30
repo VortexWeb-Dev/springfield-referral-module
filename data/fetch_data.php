@@ -21,9 +21,15 @@ $deals = $deals ?? [];
 $deals = is_array($deals) ? $deals : (array) $deals;
 
 // Filter deals if needed
-$deals = array_filter($deals, function ($deal) {
-    return $deal['UF_CRM_1728042953037'] == 1295 || $deal['UF_CRM_1728042953037'] == 1297;
-});
+// $deals = array_filter($deals, function ($deal) {
+//     return $deal['UF_CRM_1728042953037'] == 1295 || $deal['UF_CRM_1728042953037'] == 1297;
+// });
+
+if ($status !== 'approved' && $status !== 'rejected') {
+    $deals = array_filter($deals, function ($deal) {
+        return $deal['UF_CRM_1728042953037'] != 1295 && $deal['UF_CRM_1728042953037'] != 1297;
+    });
+}
 
 // Reindex $deals to ensure it's a numerically indexed array
 $deals = array_values($deals);

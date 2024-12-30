@@ -123,9 +123,21 @@ if (!isAdmin($currentUser['ID'])) {
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800 dark:text-neutral-200">${deal.UF_CRM_1727871887978}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 dark:text-neutral-200">${deal.UF_CRM_1727626055823 || 'N/A'}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800 dark:text-neutral-200">${deal.UF_CRM_1729349757819 || 'N/A'}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-end text-sm font-medium">
-                            <a href="${updateUrl}" class="p-2  inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent focus:outline-none disabled:opacity-50 disabled:pointer-events-none ${deal.UF_CRM_1728042953037 == 1297 ? 'dark:bg-red-500 dark:hover:bg-red-400 dark:focus:bg-red-400 bg-blue-600 hover:bg-blue-800 focus:bg-blue-800' : 'dark:bg-blue-500 dark:hover:bg-blue-400 dark:focus:bg-blue-400 bg-red-600 hover:bg-red-800 focus:bg-red-800' }">${deal.UF_CRM_1728042953037 == 1297 ? 'Approve' : 'Reject' }</a>
+                       <td class="px-6 py-4 whitespace-nowrap text-end text-sm font-medium">
+                            ${deal.UF_CRM_1728042953037 == 1297 ? `
+                                <!-- Approve button for rejected deals -->
+                                <a href="${updateUrl}" class="p-2 inline-flex text-white items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent focus:outline-none disabled:opacity-50 disabled:pointer-events-none dark:bg-blue-500 dark:hover:bg-blue-400 dark:focus:bg-blue-400 bg-blue-600 hover:bg-blue-800 focus:bg-blue-800">Approve</a>
+                            ` : deal.UF_CRM_1728042953037 == 1295 ? `
+                                <!-- Reject button for approved deals -->
+                                <a href="${updateUrl}" class="p-2 inline-flex text-white items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent focus:outline-none disabled:opacity-50 disabled:pointer-events-none dark:bg-red-500 dark:hover:bg-red-400 dark:focus:bg-red-400 bg-red-600 hover:bg-red-800 focus:bg-red-800">Reject</a>
+                            ` : `
+                                <!-- Both Approve and Reject buttons for undefined status -->
+                                <a href="${updateUrl}" class="p-2 inline-flex text-white items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent focus:outline-none disabled:opacity-50 disabled:pointer-events-none dark:bg-blue-500 dark:hover:bg-blue-400 dark:focus:bg-blue-400 bg-blue-600 hover:bg-blue-800 focus:bg-blue-800">Approve</a>
+                                <a href="${updateUrl}" class="p-2 inline-flex text-white items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent focus:outline-none disabled:opacity-50 disabled:pointer-events-none dark:bg-red-500 dark:hover:bg-red-400 dark:focus:bg-red-400 bg-red-600 hover:bg-red-800 focus:bg-red-800">Reject</a>
+                            `}
                         </td>
+
+
                     `;
                     tableBody.appendChild(row);
                 });
