@@ -11,5 +11,5 @@ function getAllDeals($filter = [])
     ]);
     
     $deals = $result['result'];
-    return $deals;
+    return $deals ? $deals : [];
 }

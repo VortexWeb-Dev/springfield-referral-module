@@ -29,7 +29,7 @@ if (!isAdmin($currentUser['ID'])) {
         <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-500"></div>
     </div>
 
-    <div class="max-w-[85%] mx-auto px-8 py-8 pt-0" id="formContainer" style="display: none;">
+    <div class="max-w-[95%] mx-auto px-8 py-8 pt-0" id="formContainer" style="display: none;">
         <h1 class="text-3xl font-bold text-center text-gray-800 dark:text-white">
             <span class="month"></span> <span class="year"></span> Referral Module
         </h1>
@@ -47,15 +47,15 @@ if (!isAdmin($currentUser['ID'])) {
                         <table class="min-w-full divide-y divide-gray-200 dark:divide-neutral-700">
                             <thead>
                                 <tr>
-                                    <th scope="col" class="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase dark:text-neutral-500">Deal Name</th>
-                                    <th scope="col" class="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase dark:text-neutral-500">Responsible Person</th>
-                                    <th scope="col" class="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase dark:text-neutral-500">Project Name</th>
-                                    <th scope="col" class="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase dark:text-neutral-500">Unit Number</th>
-                                    <th scope="col" class="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase dark:text-neutral-500">Property Price</th>
-                                    <th scope="col" class="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase dark:text-neutral-500">Gross Commission</th>
-                                    <th scope="col" class="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase dark:text-neutral-500">Referral Fee</th>
-                                    <th scope="col" class="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase dark:text-neutral-500">Referral Comments</th>
-                                    <th scope="col" class="px-6 py-3 text-end text-xs font-medium text-gray-500 uppercase dark:text-neutral-500">Referral Action</th>
+                                    <th scope="col" class="px-6 py-3 text-start text-xs font-medium text-blue-800 uppercase dark:text-neutral-500">Deal Name</th>
+                                    <th scope="col" class="px-6 py-3 text-start text-xs font-medium text-blue-800 uppercase dark:text-neutral-500">Responsible Person</th>
+                                    <th scope="col" class="px-6 py-3 text-start text-xs font-medium text-blue-800 uppercase dark:text-neutral-500">Project Name</th>
+                                    <th scope="col" class="px-6 py-3 text-start text-xs font-medium text-blue-800 uppercase dark:text-neutral-500">Unit Number</th>
+                                    <th scope="col" class="px-6 py-3 text-start text-xs font-medium text-blue-800 uppercase dark:text-neutral-500">Property Price</th>
+                                    <th scope="col" class="px-6 py-3 text-start text-xs font-medium text-blue-800 uppercase dark:text-neutral-500">Gross Commission</th>
+                                    <th scope="col" class="px-6 py-3 text-start text-xs font-medium text-blue-800 uppercase dark:text-neutral-500">Referral Fee</th>
+                                    <th scope="col" class="px-6 py-3 text-start text-xs font-medium text-blue-800 uppercase dark:text-neutral-500">Referral Comments</th>
+                                    <th scope="col" class="px-6 py-3 text-end text-xs font-medium text-blue-800 uppercase dark:text-neutral-500">Referral Action</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-200 dark:divide-neutral-700">
@@ -124,7 +124,7 @@ if (!isAdmin($currentUser['ID'])) {
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 dark:text-neutral-200">${deal.UF_CRM_1727626055823 || 'N/A'}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800 dark:text-neutral-200">${deal.UF_CRM_1729349757819 || 'N/A'}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-end text-sm font-medium">
-                            <a href="${updateUrl}" class="inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent focus:outline-none disabled:opacity-50 disabled:pointer-events-none ${deal.UF_CRM_1728042953037 == 1297 ? 'dark:text-red-500 dark:hover:text-red-400 dark:focus:text-red-400 text-blue-600 hover:text-blue-800 focus:text-blue-800' : 'dark:text-blue-500 dark:hover:text-blue-400 dark:focus:text-blue-400 text-red-600 hover:text-red-800 focus:text-red-800' }">${deal.UF_CRM_1728042953037 == 1297 ? 'Approve' : 'Reject' }</a>
+                            <a href="${updateUrl}" class="p-2  inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent focus:outline-none disabled:opacity-50 disabled:pointer-events-none ${deal.UF_CRM_1728042953037 == 1297 ? 'dark:bg-red-500 dark:hover:bg-red-400 dark:focus:bg-red-400 bg-blue-600 hover:bg-blue-800 focus:bg-blue-800' : 'dark:bg-blue-500 dark:hover:bg-blue-400 dark:focus:bg-blue-400 bg-red-600 hover:bg-red-800 focus:bg-red-800' }">${deal.UF_CRM_1728042953037 == 1297 ? 'Approve' : 'Reject' }</a>
                         </td>
                     `;
                     tableBody.appendChild(row);
